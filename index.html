@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Fantasy Dice Roller</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, #1a0f2e 0%, #0a0612 100%);
+      font-family: 'Arial', sans-serif;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .magical-circle {
+      position: absolute;
+      width: min(600px, 80vw);
+      height: min(600px, 80vw);
+      border: 4px solid rgba(138, 43, 226, 0.2);
+      border-radius: 50%;
+      animation: rotate 20s linear infinite;
+    }
+
+    .magical-circle::before,
+    .magical-circle::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border: 4px solid rgba(138, 43, 226, 0.1);
+      border-radius: 50%;
+      animation: pulse 2s ease-out infinite;
+    }
+
+    .magical-circle::after {
+      animation-delay: 1s;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.2); opacity: 0; }
+    }
+
+    .dice {
+      width: min(200px, 40vw);
+      height: min(200px, 40vw);
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 2s;
+    }
+
+    .die-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border: 2px solid #8a2be2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: min(48px, 10vw);
+      font-weight: bold;
+      color: #fff;
+      background: rgba(138, 43, 226, 0.1);
+      backdrop-filter: blur(5px);
+      box-shadow: 0 0 20px rgba(138, 43, 226, 0.3);
+      text-shadow: 0 0 10px #8a2be2;
+      border-radius: 20px;
+    }
+
+    .result-display {
+      position: absolute;
+      bottom: 20%;
+      font-size: min(48px, 10vw);
+      color: #fff;
+      text-shadow: 0 0 10px #8a2be2;
+      opacity: 0;
+      transition: opacity 0.5s;
+      text-align: center;
+      z-index: 10;
+    }
+
+    .particles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .epic-button {
+      position: relative;
+      margin-top: min(400px, 50vh);
+      padding: min(30px, 5vw) min(60px, 10vw);
+      font-size: min(32px, 6vw);
+      background: linear-gradient(45deg, #4a1c89, #8a2be2);
+      border: none;
+      border-radius: 50px;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 0 0 30px rgba(138, 43, 226, 0.5);
+      transform-style: preserve-3d;
+      -webkit-tap-highlight-color: transparent;
+      z-index: 100;
+    }
+
+    .epic-button::after {
+      content: 'ROLL D20';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(45deg, #8a2be2, #4a1c89);
+      border-radius: 50px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .epic-button:hover,
+    .epic-button:active {
+      transform: scale(1.1) translateY(-5px);
+      box-shadow: 0 10px 40px rgba(138, 43, 226, 0.7);
+    }
+
+    .epic-button:hover::after {
+      opacity: 1;
+    }
+
+    .epic-button:disabled {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+
+    .success-overlay,
+    .failure-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s;
+      z-index: 5;
+    }
+
+    .success-overlay {
+      background: radial-gradient(circle at center, transparent 0%, rgba(0, 255, 0, 0.2) 100%);
+    }
+
+    .failure-overlay {
+      background: radial-gradient(circle at center, transparent 0%, rgba(255, 0, 0, 0.2) 100%);
+    }
+
+    @keyframes shockwave {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(2); opacity: 0; }
+    }
+
+    .shockwave {
+      position: absolute;
+      border: 2px solid #8a2be2;
+      border-radius: 50%;
+      animation: shockwave 1s ease-out forwards;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="magical-circle"></div>
+    <div class="particles"></div>
+    <div class="success-overlay"></div>
+    <div class="failure-overlay"></div>
+    <div class="dice">
+      <div class="die-face animate__animated">20</div>
+    </div>
+    <div class="result-display animate__animated"></div>
+    <button class="epic-button animate__animated animate__pulse animate__infinite">ROLL D20</button>
+  </div>
+
+  <script>
+    const dice = document.querySelector('.dice');
+    const dieFace = document.querySelector('.die-face');
+    const resultDisplay = document.querySelector('.result-display');
+    const rollButton = document.querySelector('.epic-button');
+    const container = document.querySelector('.container');
+    const successOverlay = document.querySelector('.success-overlay');
+    const failureOverlay = document.querySelector('.failure-overlay');
+
+    function createShockwave(x, y) {
+      const wave = document.createElement('div');
+      wave.className = 'shockwave';
+      wave.style.left = x + 'px';
+      wave.style.top = y + 'px';
+      wave.style.width = '100px';
+      wave.style.height = '100px';
+      container.appendChild(wave);
+      setTimeout(() => wave.remove(), 1000);
+    }
+
+    function createParticles(x, y, color, success) {
+      const particleCount = 50;
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.position = 'absolute';
+        particle.style.left = x + 'px';
+        particle.style.top = y + 'px';
+        particle.style.background = color;
+        particle.style.width = Math.random() * 15 + 5 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.borderRadius = '50%';
+        
+        const angle = (Math.random() * 360) * Math.PI / 180;
+        const velocity = Math.random() * 200 + 100;
+        const lifetime = Math.random() * 1500 + 1000;
+        
+        particle.style.transform = `translate(${Math.cos(angle) * velocity}px, ${Math.sin(angle) * velocity}px)`;
+        particle.style.transition = `all ${lifetime}ms cubic-bezier(0,0,0.2,1)`;
+        particle.style.opacity = '1';
+        
+        container.appendChild(particle);
+        
+        setTimeout(() => {
+          particle.style.opacity = '0';
+          setTimeout(() => particle.remove(), lifetime);
+        }, 0);
+      }
+    }
+
+    async function rollDice() {
+      if (rollButton.disabled) return;
+      
+      rollButton.disabled = true;
+      resultDisplay.style.opacity = '0';
+      successOverlay.style.opacity = '0';
+      failureOverlay.style.opacity = '0';
+      
+      dieFace.className = 'die-face animate__animated';
+      resultDisplay.className = 'result-display animate__animated';
+      
+      const rolls = 30;
+      let currentRoll = 0;
+      
+      const rollInterval = setInterval(() => {
+        currentRoll++;
+        const random = Math.floor(Math.random() * 20) + 1;
+        dice.style.transform = `rotateX(${Math.random() * 720}deg) rotateY(${Math.random() * 720}deg) rotateZ(${Math.random() * 720}deg)`;
+        dieFace.textContent = random;
+        
+        const rect = dice.getBoundingClientRect();
+        createShockwave(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        
+        if (currentRoll === rolls) {
+          clearInterval(rollInterval);
+          const finalResult = Math.floor(Math.random() * 20) + 1;
+          dieFace.textContent = finalResult;
+          
+          setTimeout(() => {
+            const success = finalResult > 10;
+            dieFace.className = 'die-face animate__animated animate__rubberBand';
+            resultDisplay.className = `result-display animate__animated animate__${success ? 'bounceIn' : 'shakeX'}`;
+            resultDisplay.style.opacity = '1';
+            resultDisplay.innerHTML = success ? 
+              '<span style="color: #00ff00; font-size: 1.2em">★ SUCCESS! ★</span>' : 
+              '<span style="color: #ff0000; font-size: 1.2em">✖ FAILURE ✖</span>';
+            
+            const rect = dice.getBoundingClientRect();
+            createParticles(
+              rect.left + rect.width / 2,
+              rect.top + rect.height / 2,
+              success ? '#00ff00' : '#ff0000',
+              success
+            );
+            
+            if (success) {
+              successOverlay.style.opacity = '1';
+            } else {
+              failureOverlay.style.opacity = '1';
+            }
+            
+            rollButton.disabled = false;
+            rollButton.className = 'epic-button animate__animated animate__pulse animate__infinite';
+          }, 500);
+        }
+      }, 50);
+    }
+
+    rollButton.addEventListener('click', rollDice);
+    rollButton.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      rollDice();
+    });
+
+    // Prevent default touch behaviors
+    document.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+  </script>
+</body>
+</html>
